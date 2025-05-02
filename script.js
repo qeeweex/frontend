@@ -7,11 +7,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const particle = document.createElement('div');
         particle.classList.add('particle');
 
-        const size = Math.random() * 5 + 1; // Размер частицы
-        const posX = Math.random() * 100;   // Положение по горизонтали
-        const posY = Math.random() * 100;   // Положение по вертикали
-        const animDuration = Math.random() * 10 + 10; // Длительность анимации
-        const animDelay = Math.random() * 5; // Задержка перед стартом анимации
+        const size = Math.random() * 5 + 1; 
+        const posX = Math.random() * 100;   
+        const posY = Math.random() * 100;   
+        const animDuration = Math.random() * 10 + 10; 
+        const animDelay = Math.random() * 5; 
 
         // Применение стилей к частицам
         particle.style.width = size + 'px';
