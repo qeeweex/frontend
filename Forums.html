@@ -11,13 +11,19 @@
 <body>
 <div class="particles" id="particles"></div>
 
+<!-- Верхняя панель -->
 <header class="navbar">
+    <!-- Брендинг -->
     <div class="brand">
         <div class="brand-name">
-            <i class="fas fa-shield-alt"></i>
-            VARNIX GROUP
+            <!-- Иконка щита и название группы -->
+            <i class="fas fa-shield-alt">
+                VARNIX GROUP
+            </i>
         </div>
     </div>
+    
+    <!-- Хедер -->
     <nav>
         <ul class="nav-list">
             <li class="nav-item"><a href="/forum/forum">Home</a></li>
@@ -25,11 +31,18 @@
             <li class="nav-item"><a href="#">Services</a></li>
         </ul>
     </nav>
+    
+    <!-- Профиль пользователя -->
     <div class="profile">
+        <!-- Имя пользователя и статус -->
         <a href="/forum/profile" class="username">
+            <!-- Отображение имени пользователя в верхнем регистре -->
             <span th:text="${user.username.toUpperCase()}">Developer_42</span>
+            
+            <!-- Значок статуса -->
             <div th:if="${user.status != null}"
                  th:class="'status-badge status-badge-' + ${#strings.toLowerCase(user.status)}">
+                <!-- Иконка статуса, выбирается по статусу -->
                 <i class="fas"
                    th:class="${'fas ' + (user.status == 'Founder' ? 'fa-crown' :
               (user.status == 'CEO' ? 'fa-chess-king' :
@@ -37,57 +50,71 @@
               (user.status == 'creator' ? 'fa-code' :
               (user.status == 'Active' ? 'fa-check-circle' :
               (user.status == 'Inactive' ? 'fa-times-circle' : 'fa-user'))))))}"></i>
+                <!-- Текст статуса -->
                 <span th:text="${user.status}">Status</span>
             </div>
         </a>
+        <!-- Аватар пользователя, если есть -->
         <img th:if="${user.avatar != null}" th:src="@{/forum/avatar/{id}(id=${user.id})}" alt="Avatar" class="avatar">
+        
+        <!-- Заглушка, если аватара нет -->
         <img th:if="${user.avatar == null}" th:src="@{/avatar.png}" alt="Avatar" class="avatar" src="/avatar.png">
     </div>
 </header>
 
+<!-- Поиска и героя -->
 <section class="search-hero">
+    <!-- Заголовок поиска -->
     <h2 class="search-title">Find discussions in <span>Varnix Group</span> community</h2>
 
+    <!-- Контейнер формы поиска -->
     <div class="search-form-container">
+        <!-- Форма поиска -->
         <form th:action="@{/forum/forum}" method="get" class="search-form">
+            <!-- Поле ввода поиска -->
             <div class="search-input-wrapper">
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" name="search" class="search-input" placeholder="Search for topics, questions, answers..." th:value="${param.search}">
             </div>
 
+            <!-- Варианты поиска (фильтры) -->
             <div class="search-options">
+                <!-- Все -->
                 <input type="radio" id="filter-everything" name="searchType" value="Everything" class="search-filter-input" checked>
                 <label for="filter-everything" class="search-filter-label">
                     <i class="fas fa-globe"></i> Everything
                 </label>
-
+                <!-- Только заголовки -->
                 <input type="radio" id="filter-titles" name="searchType" value="Titles" class="search-filter-input">
                 <label for="filter-titles" class="search-filter-label">
                     <i class="fas fa-heading"></i> Titles Only
                 </label>
-
+                <!-- Пользователи -->
                 <input type="radio" id="filter-users" name="searchType" value="Users" class="search-filter-input">
                 <label for="filter-users" class="search-filter-label">
                     <i class="fas fa-users"></i> Users
                 </label>
-
+                <!-- Недавние -->
                 <input type="radio" id="filter-recent" name="searchType" value="Recent" class="search-filter-input">
                 <label for="filter-recent" class="search-filter-label">
                     <i class="fas fa-clock"></i> Recent
                 </label>
             </div>
 
+            <!-- Действия поиска -->
             <div class="search-actions">
+                <!-- Кнопка поиска -->
                 <button type="submit" class="search-button">
                     <i class="fas fa-search"></i> Search Forum
                 </button>
-
+                <!-- Создать новый пост -->
                 <a href="/post/new" class="new-post-button">
                     <i class="fas fa-plus"></i> New Post
                 </a>
             </div>
         </form>
 
+        <!-- Популярные теги для быстрого поиска -->
         <div class="search-tags">
             <div class="search-tag">#Important</div>
             <div class="search-tag">#programming</div>
@@ -98,26 +125,39 @@
     </div>
 </section>
 
+<!-- Основной контент -->
 <main>
     <div class="container">
+        <!-- Форум -->
         <div class="subforum">
+            <!-- Заголовок форума -->
             <div class="subforum-title">
                 <h1>Forum</h1>
             </div>
+            
+            <!-- Ближайшие события -->
             <div class="subforum-events">
+                <!-- Заголовок событий -->
                 <div class="events-title">
                     <h2>Upcoming Events</h2>
                 </div>
 
+                <!-- Контейнер для событий -->
                 <div class="events-container">
-                    <!-- Loop through events from the model -->
+                    <!-- Цикл по событиям -->
                     <div th:each="event : ${events}" class="event-card">
+                        <!-- Заголовок события -->
                         <div class="event-header">
+                            <!-- Информация о пользователе, создавшем событие -->
                             <div class="event-user">
+                                <!-- Аватар пользователя, если есть -->
                                 <img th:if="${event.user.avatar != null}" th:src="@{/forum/avatar/{id}(id=${event.user.id})}" alt="User Avatar" class="event-avatar">
+                                <!-- Заглушка, если аватар отсутствует -->
                                 <img th:if="${event.user.avatar == null}" th:src="@{/avatar.png}" alt="User Avatar" class="event-avatar" src="/api/placeholder/30/30">
+                                <!-- Имя пользователя -->
                                 <span th:text="${event.user.username}">Username</span>
                             </div>
+                            <!-- Кнопка просмотра события -->
                             <div class="event-actions">
                                 <a th:href="@{/forum/event/{id}(id=${event.id})}" class="event-view-btn">
                                     <i class="fas fa-external-link-alt"></i>
@@ -125,21 +165,26 @@
                             </div>
                         </div>
 
+                        <!-- Основное содержание события -->
                         <div class="event-body">
+                            <!-- Название события -->
                             <h3 class="event-title" th:text="${event.title}">Event Title</h3>
+                            <!-- Описание события -->
                             <p class="event-description" th:text="${event.description}">Event description goes here</p>
-
+                            <!-- Метаданные -->
                             <div class="event-meta">
+                                <!-- Время события -->
                                 <div class="event-time">
                                     <i class="fas fa-clock"></i>
                                     <span th:text="${#temporals.format(event.time, 'dd MMM yyyy HH:mm')}">03 Apr 2025 22:58</span>
                                 </div>
+                                <!-- Место проведения -->
                                 <div class="event-location">
                                     <i class="fas fa-map-marker-alt"></i>
                                     <span th:text="${event.location}">VARNIX Forum</span>
                                 </div>
                             </div>
-
+                            <!-- Тип события, с иконкой и классом -->
                             <div class="event-type" th:classappend="${'event-type-' + #strings.toLowerCase(#strings.replace(event.type, ' ', '-'))}">
                                 <i class="fas"
                                    th:class="${'fas ' +
@@ -153,8 +198,7 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Message for when no events are available -->
+                    <!-- Сообщение, если событий нет -->
                     <div class="no-events" th:if="${events == null || events.isEmpty()}">
                         <i class="fas fa-calendar-times"></i>
                         <p>No upcoming events at this time</p>
@@ -162,43 +206,46 @@
                 </div>
             </div>
 
+            <!-- Контейнер для постов -->
             <div class="posts-container">
+                <!-- Цикл по постам -->
                 <div th:each="post : ${posts.content}" class="post-container">
                     <div class="subforum-row">
+                        <!-- Иконка и аватар автора -->
                         <div class="subforum-icon subforum-column center">
                             <img th:if="${post.owner.avatar != null}" th:src="@{/forum/avatar/{id}(id=${post.owner.id})}" alt="Owner Avatar" class="post-avatar">
                             <img th:if="${post.owner.avatar == null}" th:src="@{/avatar.png}" alt="Owner Avatar" class="post-avatar" src="/api/placeholder/50/50">
                         </div>
+                        <!-- Описание поста -->
                         <div class="subforum-description subforum-column">
                             <h4>
                                 <a th:href="@{/post/{id}(id=${post.id})}" th:text="${post.title}">Title</a>
                             </h4>
                             <p th:text="${post.descr}">Description</p>
-
-                            <!-- Branch indicator section -->
+                            <!-- Информация о ветках -->
                             <div class="post-branches">
                                 <div class="branch-count">
                                     <i class="fas fa-code-branch"></i>
                                     <span th:text="${post.branch.size()}">3 branches</span>
                                 </div>
+                                <!-- Статус ветки: публичная или приватная -->
                                 <div th:if="${post.branchStatus == 'public'}" class="branch-type branch-public">
-                                    <i class="fas fa-globe"></i>
-                                    Public
+                                    <i class="fas fa-globe"></i> Public
                                 </div>
                                 <div th:if="${post.branchStatus == 'private'}" class="branch-type branch-private">
-                                    <i class="fas fa-lock"></i>
-                                    Private
+                                    <i class="fas fa-lock"></i> Private
                                 </div>
                             </div>
                         </div>
+                        <!-- Статистика комментариев и веток -->
                         <div class="subforum-stats subforum-column center">
                             <span th:text="${post.comment.size()} + ' Comments'">12 Comments</span>
-                            <!-- Add branch stats -->
                             <div class="branch-stat">
                                 <i class="fas fa-code-branch"></i>
                                 <span th:text="${post.branch.size()}">3</span>
                             </div>
                         </div>
+                        <!-- Информация о последнем посте -->
                         <div class="subforum-info subforum-column">
                             <b>Last post by <a th:href="@{/forum/profile/{id}(id=${post.owner.id})}" th:text="${post.owner.username}">CyberCoder</a></b>
                             <br>on <small th:text="${#temporals.format(post.creationDate, 'dd MMM yyyy')}">03 Mar 2025</small>
@@ -207,72 +254,46 @@
                 </div>
             </div>
 
+            <!-- Эффект терминала для отображения статуса -->
             <div class="terminal-effect">
                 <div class="terminal-line">Displaying forum posts. Total threads: <span th:text="${posts.totalElements}">42</span></div>
                 <div class="terminal-line">Current page: <span th:text="${posts.number + 1}">1</span> of <span th:text="${posts.totalPages}">5</span></div>
                 <div class="terminal-line">System status: online | Server load: optimal</div>
             </div>
 
+            <!-- Пагинация -->
             <div class="pagination" th:if="${posts.totalPages > 1}">
+                <!-- Предыдущая страница -->
                 <a th:if="${posts.number > 0}" th:href="@{/forum/forum(page=${posts.number - 1}, search=${param.search}, searchType=${param.searchType})}">&laquo; Previous</a>
+                <!-- Текущая страница -->
                 <span th:text="${posts.number + 1} + ' / ' + ${posts.totalPages}">1 / 5</span>
+                <!-- Следующая страница -->
                 <a th:if="${posts.number < posts.totalPages - 1}" th:href="@{/forum/forum(page=${posts.number + 1}, search=${param.search}, searchType=${param.searchType})}">Next &raquo;</a>
             </div>
         </div>
     </div>
 </main>
 
+<!-- Нижний колонтитул -->
 <footer class="footer">
     <div class="footer-content">
+        <!-- Ссылки в футере -->
         <div class="footer-links">
             <a href="#">About</a>
             <a href="#">Terms</a>
             <a href="#">Privacy</a>
             <a href="#">Contact</a>
         </div>
+        <!-- Авторские права -->
         <div class="copyright">
             &copy; 2025 VARNIX GROUP. All rights reserved.
         </div>
     </div>
 </footer>
 
+<!-- Версия сайта -->
 <div class="version">v1.2.3</div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Create particles for background effect
-        const particlesContainer = document.getElementById('particles');
-        const particleCount = 20;
-
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            particle.classList.add('particle');
-
-            const size = Math.random() * 5 + 1;
-            const posX = Math.random() * 100;
-            const posY = Math.random() * 100;
-            const animDuration = Math.random() * 10 + 10;
-            const animDelay = Math.random() * 5;
-
-            particle.style.width = size + 'px';
-            particle.style.height = size + 'px';
-            particle.style.left = posX + '%';
-            particle.style.top = posY + '%';
-            particle.style.animation = `float ${animDuration}s ease-in-out ${animDelay}s infinite, pulse 4s ease-in-out infinite`;
-
-            particlesContainer.appendChild(particle);
-        }
-
-        // Add highlight for search tags when clicked
-        const searchTags = document.querySelectorAll('.search-tag');
-        searchTags.forEach(tag => {
-            tag.addEventListener('click', function() {
-                const searchInput = document.querySelector('.search-input');
-                const tagText = this.textContent;
-                searchInput.value = tagText;
-            });
-        });
-    });
-</script>
+<script src="script.js"></script>
 </body>
 </html>
