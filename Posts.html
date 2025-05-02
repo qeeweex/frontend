@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${post.title}">Post Title</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0.0/dist/fancybox.umd.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0.0/dist/fancybox.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/themes/prism-okaidia.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<!-- Мета-теги для защиты от CSRF атак, содержат токен и имя заголовка -->
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+<!-- Основной контейнер для частиц (анимации или фона) -->
+<div class="particles" id="particles"></div>
+
+<!-- Шапка сайта с навигацией и профилем пользователя -->
+<header class="navbar">
+    <!-- Логотип и название сайта с переходом на главную -->
+    <div class="brand">
+        <div class="brand-name">
+            <a href="/forum/forum" style="text-decoration: none; color: inherit; cursor: pointer;">
+                <i class="fas fa-shield-alt"></i>
+                VARNIX GROUP
+            </a>
+        </div>
+    </div>
+    <!-- Навигационное меню с ссылками на разделы сайта -->
+    <nav>
+        <ul class="nav-list">
+            <li class="nav-item"><a th:href="@{/forum/forum}">Home</a></li>
+            <li class="nav-item"><a th:href="@{/post}">Posts</a></li>
+            <li class="nav-item"><a th:href="@{/about}">About</a></li>
+            <li class="nav-item"><a th:href="@{/contact}">Contact</a></li>
+        </ul>
+    </nav>
+    <!-- Блок профиля пользователя с именем, статусом и аватаром -->
+    <div class="profile">
+        <!-- Имя пользователя и статус -->
+        <a href="/forum/profile" class="username">
+            <span th:text="${user.username.toUpperCase()}">Developer_42</span>
+            <!-- Статус пользователя с иконкой, зависит от статуса -->
+            <div th:if="${user.status != null}"
+                 th:class="'status-badge status-badge-' + ${#strings.toLowerCase(user.status)}">
+                <i class="fas"
+                   th:class="${'fas ' + (user.status == 'Founder' ? 'fa-crown' :
+              (user.status == 'CEO' ? 'fa-chess-king' :
+              (user.status == 'Super' ? 'fa-star' :
+              (user.status == 'creator' ? 'fa-code' :
+              (user.status == 'Active' ? 'fa-check-circle' :
+              (user.status == 'Inactive' ? 'fa-times-circle' : 'fa-user'))))))}"></i>
+                <span th:text="${user.status}">Status</span>
+            </div>
+        </a>
+        <!-- Аватар пользователя, если есть -->
+        <img th:if="${user.avatar != null}" th:src="@{/forum/avatar/{id}(id=${user.id})}" alt="Avatar" class="avatar">
+        <!-- Заглушка, если аватар отсутствует -->
+        <img th:if="${user.avatar == null}" th:src="@{/avatar.png}" alt="Avatar" class="avatar" src="/api/placeholder/40/40">
+    </div>
+</header>
+
+<!-- Основной контент -->
+<main>
+    <div class="container">
+        <!-- Карточка поста с заголовком и метадата -->
+        <div class="post-card">
+            <!-- Заголовок поста и метаинформация (автор, дата, ID) -->
+            <div class="post-header">
+                <h1 th:text="${post.title}">Post Title</h1>
+                <br/>
+                <div class="post-meta">
+                    <!-- Автор -->
+                    <div class="post-meta-item">
+                        <br/>
+                        <i class="fas fa-user"></i>
+                        <span th:text="${post.owner.username}">Author</span>
+                    </div>
+                    <!-- Дата создания -->
+                    <div class="post-meta-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span th:text="${#temporals.format(post.creationDate, 'dd MMM yyyy')}">Date</span>
+                    </div>
+                    <!-- ID владельца -->
+                    <div class="post-meta-item">
+                        <i class="fas fa-id-card"></i>
+                        <span th:text="'ID: ' + ${post.owner.id}">User ID</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Основное содержание поста -->
+            <div class="post-content">
+                <!-- Информация об авторе поста -->
+                <div class="author-info">
+                    <!-- Аватар автора -->
+                    <img th:if="${post.owner.avatar != null}" th:src="@{/forum/avatar/{id}(id=${post.owner.id})}" alt="Author Avatar" class="author-avatar">
+                    <!-- Заглушка для аватара -->
+                    <img th:if="${post.owner.avatar == null}" th:src="@{/avatar.png}" alt="Author Avatar" class="author-avatar" src="/api/placeholder/80/80">
+                    <!-- Имя пользователя -->
+                    <a th:href="@{/forum/profile/{id}(id=${post.owner.id})}" class="author-username" th:text="${post.owner.username}">Author Name</a>
+                    <!-- ID пользователя -->
+                    <span class="author-id" th:text="'ID: ' + ${post.owner.id}">User ID</span>
+                </div>
+                <!-- Основной контент поста с поддержкой Markdown -->
+                <div class="content markdown-content" th:utext="${formatedContent}">
+                    Post content goes here...
+                </div>
+            </div>
+
+            <!-- Блок лайков/дизлайков -->
+            <div class="post-like-section">
+                <!-- Кнопка лайка -->
+                <button class="like-button" id="likeButton" th:attr="data-postid=${post.id}" th:classappend="${isLiked ? 'liked' : ''}">
+                    <i class="far fa-thumbs-up" id="likeIcon" th:classappend="${isLiked ? 'fas' : 'far'}" th:removeClass="${isLiked ? 'far' : 'fas'}"></i>
+                </button>
+                <!-- Отображение количества лайков -->
+                <span class="like-count" id="likeCount" th:text="${likeCount}">0</span>
+
+                <!-- Кнопка дизлайка -->
+                <button class="dislike-button" id="dislikeButton" th:attr="data-postid=${post.id}" th:classappend="${isDisliked ? 'disliked' : ''}">
+                    <i class="far fa-thumbs-down" id="dislikeIcon" th:classappend="${isDisliked ? 'fas' : 'far'}" th:removeClass="${isDisliked ? 'far' : 'fas'}"></i>
+                </button>
+                <!-- Количество дизлайков -->
+                <span class="dislike-count" id="dislikeCount" th:text="${dislikeCount}">0</span>
+
+                <!-- Скрытые поля для состояния лайка/дизлайка -->
+                <input type="hidden" id="isPostLiked" th:value="${isLiked}">
+                <input type="hidden" id="isPostDisliked" th:value="${isDisliked}">
+            </div>
+
+            <!-- Панель управления постом (редактировать, удалить), только для владельца или модераторов -->
+            <div class="post-actions" th:if="${post.owner.id == user.id or user.role == 'ROLE_ADMIN' or user.role == 'ROLE_MODERATOR'}">
+                <button class="manage-post-btn" onclick="togglePostMenu()">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <!-- Меню действий -->
+                <div class="post-actions-menu" id="postActionsMenu">
+                    <!-- Редактировать -->
+                    <a th:href="@{/post/{id}/edit(id=${post.id})}" class="post-action-item">
+                        <i class="fas fa-edit"></i> Edit Post
+                    </a>
+                    <!-- Удалить -->
+                    <button class="post-action-item delete-post-btn" onclick="confirmPostDelete()">
+                        <i class="fas fa-trash-alt"></i> Delete Post
+                    </button>
+                </div>
+            </div>
+
+            <!-- Галерея медиафайлов, если есть -->
+            <div class="post-media" th:if="${mediaList != null and !#lists.isEmpty(mediaList)}">
+                <h3><i class="fas fa-images"></i> Media Attachments</h3>
+                <div class="media-gallery">
+                    <!-- Перебор медиафайлов -->
+                    <div th:each="media : ${mediaList}" class="media-thumbnail">
+                        <!-- Изображение -->
+                        <a th:if="${media.type.contains('image/')}" data-fancybox="gallery" th:href="@{/post/media/{id}(id=${media.id})}">
+                            <img th:src="@{/post/media/{id}(id=${media.id})}" alt="Media Image">
+                        </a>
+                        <!-- Видео -->
+                        <video th:if="${media.type.contains('video/')}" controls>
+                            <source th:src="@{/post/media/{id}(id=${media.id})}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Раздел комментариев -->
+        <div class="comments-section">
+            <!-- Заголовок комментариев -->
+            <div class="comments-header">
+                <i class="fas fa-comments fa-lg"></i>
+                <h3>Comments</h3>
+            </div>
+
+            <!-- Сообщение, если комментариев нет -->
+            <div th:if="${#lists.isEmpty(comments)}" style="padding: 20px; text-align: center; color: var(--text-muted);">
+                <i class="fas fa-comment-slash fa-2x" style="margin-bottom: 10px;"></i>
+                <p>No comments yet. Be the first to share your thoughts!</p>
+            </div>
+
+            <!-- Перебор и отображение каждого комментария -->
+            <div th:each="comment : ${comments}" class="comment" th:attr="data-id=${comment.id}">
+                <!-- Информация об авторе комментария -->
+                <div class="comment-author">
+                    <img th:if="${comment.user.avatar != null}" th:src="@{/forum/avatar/{id}(id=${comment.user.id})}" alt="Comment Author Avatar" class="comment-avatar">
+                    <img th:if="${comment.user.avatar == null}" th:src="@{/avatar.png}" alt="Comment Author Avatar" class="comment-avatar" src="/api/placeholder/60/60">
+                    <div>
+                        <a th:href="@{/forum/profile/{id}(id=${comment.user.id})}" class="comment-username" th:text="${comment.user.username}">Comment Author</a>
+                        <span class="comment-id" th:text="'ID: ' + ${comment.user.id}">User ID</span>
+                        <span class="comment-date" th:text="${#temporals.format(comment.createdAt, 'dd MMM yyyy')}">Comment Date</span>
+                    </div>
+                </div>
+                <!-- Текст комментария -->
+                <div class="comment-content">
+                    <p th:text="${comment.content}">Comment content here...</p>
+                </div>
+                <!-- Удаление комментария (только для автора или админа) -->
+                <div class="comment-actions" th:if="${comment.user.id == user.id or user.role == 'ROLE_ADMIN'}">
+                    <button class="delete-comment-btn" th:onclick="'confirmDelete(' + ${comment.id} + ')'">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Форма добавления нового комментария -->
+            <div class="add-comment-section">
+                <form th:action="@{/post/{id}/comment(id=${post.id})}" method="post">
+                    <textarea name="content" placeholder="Add your thoughts to the discussion..." required class="add-comment-textarea"></textarea>
+                    <button type="submit" class="add-comment-button">
+                        <i class="fas fa-paper-plane"></i> Post Comment
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Раздел ветвлений (branches) -->
+        <div class="branches-section">
+            <!-- Заголовок и управление ветками -->
+            <div class="branches-header">
+                <div class="branches-title">
+                    <i class="fas fa-code-branch"></i>
+                    <h3>Branches</h3>
+                </div>
+                <div class="branches-controls">
+                    <!-- Кнопка создания ветки -->
+                    <button class="branch-button" id="createBranchBtn">
+                        <i class="fas fa-plus"></i> Create Branch
+                    </button>
+                    <!-- Фильтр отображения веток -->
+                    <select class="branch-filter" id="branchFilter">
+                        <option value="all">All Branches</option>
+                        <option value="public">Public Only</option>
+                        <option value="private">Private Only</option>
+                        <option value="my">My Branches</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Визуализация ветвлений (граф) -->
+            <div class="branch-visualization">
+                <div class="branch-visualization-title">
+                    <i class="fas fa-project-diagram"></i>
+                    <span>Branch Visualization</span>
+                </div>
+                <div class="branch-graph">
+                    <!-- Главная ветка -->
+                    <div class="branch-graph-line">
+                        <div class="branch-node main" data-info="Main Branch by Author"></div>
+                        <div class="branch-line main"></div>
+                        <div class="branch-node-text">Main Branch (Original)</div>
+                    </div>
+                    <!-- Остальные ветки -->
+                    <div th:each="branch : ${branches}" class="branch-graph-line">
+                        <div class="branch-node" th:data-info="${'Created by ' + branch.owner.username + ' on ' + #temporals.format(branch.createdAt, 'dd MMM yyyy')}"></div>
+                        <div class="branch-line"></div>
+                        <div class="branch-node-text" th:text="${branch.title}">Branch Name</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Список веток с деталями -->
+            <div id="branchesList" class="branches-list">
+                <!-- Сообщение, если ветки отсутствуют -->
+                <div th:if="${#lists.isEmpty(branches)}" class="no-branches-message">
+                    <i class="fas fa-code-branch fa-2x"></i>
+                    <p>No branches have been created for this post yet. Create the first branch to propose changes or extensions!</p>
+                </div>
+                <!-- Отображение каждой ветки -->
+                <div th:each="branch : ${branches}" class="branch-item" th:attr="data-id=${branch.id}, data-visibility=${branch.visibility}">
+                    <!-- Информация о ветке -->
+                    <div class="branch-header">
+                        <div class="branch-left">
+                            <!-- Аватар владельца ветки -->
+                            <img th:if="${branch.owner.avatar != null}" th:src="@{/forum/avatar/{id}(id=${branch.owner.id})}" alt="Branch Owner Avatar" class="branch-avatar">
+                            <!-- Заглушка для аватара -->
+                            <img th:if="${branch.owner.avatar == null}" th:src="@{/avatar.png}" alt="Branch Owner Avatar" class="branch-avatar" src="/api/placeholder/40/40">
+                            <div class="branch-info">
+                                <!-- Название ветки -->
+                                <div class="branch-title" th:text="${branch.title}">Branch Title</div>
+                                <!-- Имя владельца и дата создания -->
+                                <div class="branch-meta">
+                                    <a th:href="@{/forum/profile/{id}(id=${branch.owner.id})}" th:text="${branch.owner.username}">Branch Owner</a>
+                                    <span th:text="${#temporals.format(branch.createdAt, 'dd MMM yyyy')}">Creation Date</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Дополнительные метрики и действия -->
+                        <div class="branch-right">
+                            <!-- Статистика (лайки, комментарии) -->
+                            <div class="branch-stats">
+                                <div class="branch-stat">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span th:text="${branch.approvals}">5</span>
+                                </div>
+                                <div class="branch-stat">
+                                    <i class="fas fa-comment"></i>
+                                    <span th:text="${branch.commentsCount}">12</span>
+                                </div>
+                            </div>
+                            <!-- Индикация публичной или приватной ветки -->
+                            <div class="branch-type-indicator" th:classappend="${branch.visibility == 'PUBLIC' ? 'public-branch' : 'private-branch'}">
+                                <i th:class="${branch.visibility == 'PUBLIC' ? 'fas fa-globe' : 'fas fa-lock'}"></i>
+                                <span th:text="${branch.visibility}">PUBLIC</span>
+                            </div>
+                            <!-- Кнопка просмотра ветки -->
+                            <a th:href="@{/post/{postId}/branch/{branchId}(postId=${post.id},branchId=${branch.id})}" class="branch-view-btn">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Описание ветки -->
+                    <div class="branch-description" th:text="${branch.description}">
+                        Branch description goes here...
+                    </div>
+                    <!-- Футер ветки с метриками и действиями -->
+                    <div class="branch-footer">
+                        <div class="branch-stats">
+                            <span><i class="fas fa-code-commit"></i> <span th:text="${branch.commitCount}">3</span> commits</span>
+                            <span><i class="fas fa-calendar-alt"></i> Last updated <span th:text="${#temporals.format(branch.getLastUpdated(), 'dd MMM yyyy')}">12 Mar 2025</span></span>
+                        </div>
+                        <!-- Действия с веткой: удалить, запросить слияние -->
+                        <div class="branch-actions">
+                            <div class="branch-action" th:if="${branch.owner.id == user.id || user.role == 'ROLE_ADMIN'}">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>Delete</span>
+                            </div>
+                            <div class="branch-action" th:if="${branch.margeRequestActive}">
+                                <i class="fas fa-code-merge"></i>
+                                <span>View Merge Request</span>
+                            </div>
+                            <div class="branch-action" th:if="${branch.owner.id == user.id && !branch.margeRequestActive}">
+                                <i class="fas fa-code-merge"></i>
+                                <span>Request Merge</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Панель активного merge-запроса, показывается при его наличии -->
+            <div class="merge-request-panel" th:if="${activeMergeRequest != null && (post.owner.id == user.id)}">
+                <div class="merge-request-info">
+                    <div class="merge-request-title">
+                        <i class="fas fa-code-merge"></i>
+                        <span>Merge Request Pending</span>
+                    </div>
+                    <div class="merge-request-description">
+                        <span th:text="${activeMergeRequest.user.username}">User123</span> has requested to merge their branch
+                        "<span th:text="${activeMergeRequest.branch.title}">Feature Branch</span>" into the main post.
+                    </div>
+                </div>
+                <!-- Действия по одобрению или отклонению merge-запроса -->
+                <div class="merge-request-actions">
+                    <button class="merge-action-btn merge-reject-btn" th:onclick="'rejectMergeRequest(' + ${activeMergeRequest.id} + ')'">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                    <button class="merge-action-btn merge-approve-btn" th:onclick="'approveMergeRequest(' + ${activeMergeRequest.id} + ')'">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно для создания новой ветки -->
+        <div class="modal" id="createBranchModal">
+            <div class="modal-content">
+                <!-- Заголовок модального окна -->
+                <div class="modal-header">
+                    <h3><i class="fas fa-code-branch"></i> Create New Branch</h3>
+                    <span class="close-modal" onclick="closeCreateBranchModal()">&times;</span>
+                </div>
+                <!-- Форма для ввода данных новой ветки -->
+                <div class="modal-body">
+                    <form id="createBranchForm" onsubmit="submitBranch(event)">
+                        <!-- Название ветки -->
+                        <div class="form-group">
+                            <label for="branchTitle">Branch Title</label>
+                            <input type="text" id="branchTitle" name="title" placeholder="Enter a descriptive title" required>
+                        </div>
+                        <!-- Описание ветки -->
+                        <div class="form-group">
+                            <label for="branchDescription">Description</label>
+                            <textarea id="branchDescription" name="description" placeholder="Describe the purpose of this branch" required></textarea>
+                        </div>
+                        <!-- Контент ветки (редактируемый) -->
+                        <div class="form-group">
+                            <label for="branchContent">Branch Content</label>
+                            <textarea id="branchContent" name="content" placeholder="Enter your modified content based on the original post" required></textarea>
+                        </div>
+                        <!-- Выбор доступа (публичная или приватная) -->
+                        <div class="form-group branch-visibility-options">
+                            <label>Visibility</label>
+                            <div class="radio-options">
+                                <div class="radio-option">
+                                    <input type="radio" id="visibilityPublic" name="visibility" value="PUBLIC" checked>
+                                    <label for="visibilityPublic">
+                                        <i class="fas fa-globe"></i> Public
+                                        <span class="hint">Visible to everyone</span>
+                                    </label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" id="visibilityPrivate" name="visibility" value="PRIVATE">
+                                    <label for="visibilityPrivate">
+                                        <i class="fas fa-lock"></i> Private
+                                        <span class="hint">Visible only to you and post owner</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Кнопки отмены и создания -->
+                        <div class="form-actions">
+                            <button type="button" class="cancel-btn" onclick="closeCreateBranchModal()">Cancel</button>
+                            <button type="submit" class="submit-btn">
+                                <i class="fas fa-plus"></i> Create Branch
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Нижний колонтитул сайта -->
+<footer class="footer">
+    <div class="footer-content">
+        <!-- Важные ссылки сайта -->
+        <div class="footer-links">
+            <a href="#">About</a>
+            <a href="#">Terms</a>
+            <a href="#">Privacy</a>
+            <a href="#">Contact</a>
+        </div>
+        <!-- Авторские права -->
+        <div class="copyright">
+            &copy; 2025 VARNIX GROUP. All rights reserved.
+        </div>
+    </div>
+</footer>
+
+<!-- Скрипты Prism для подсветки кода -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/prism.min.js"></script>
+<!-- Зависимости Prism -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-markup-templating.min.js"></script>
+<!-- Поддержка языков программирования -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-java.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-c.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-cpp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-csharp.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-go.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-rust.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-html.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-php.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-typescript.min.js"></script>
+
+<!-- Основной JS скрипт сайта -->
+<script src="script.js"></script>
+
+<!-- Модальные окна для подтверждения удаления комментариев, постов, веток -->
+<div class="delete-confirmation" id="deleteConfirmation">
+    <!-- Подтверждение удаления комментария -->
+    <div class="confirmation-box">
+        <h3><i class="fas fa-exclamation-triangle" style="color: #ff4d4d; margin-right: 10px;"></i> Delete Comment?</h3>
+        <p>Are you sure you want to delete this comment? This action cannot be undone.</p>
+        <div class="confirmation-buttons">
+            <button class="cancel-btn" onclick="cancelDelete()">Cancel</button>
+            <button class="confirm-delete-btn" id="confirmDeleteBtn"><i class="fas fa-trash-alt"></i> Delete</button>
+        </div>
+    </div>
+</div>
+
+<div class="delete-confirmation" id="deletePostConfirmation">
+    <!-- Подтверждение удаления поста -->
+    <div class="confirmation-box">
+        <h3><i class="fas fa-exclamation-triangle" style="color: #ff4d4d; margin-right: 10px;"></i> Delete Post?</h3>
+        <p>Are you sure you want to delete this post? This action cannot be undone and all comments will be lost.</p>
+        <div class="confirmation-buttons">
+            <button class="cancel-btn" onclick="cancelPostDelete()">Cancel</button>
+            <button class="confirm-delete-btn" id="confirmPostDeleteBtn"><i class="fas fa-trash-alt"></i> Delete</button>
+        </div>
+    </div>
+</div>
+
+<div class="delete-confirmation" id="deleteBranchConfirmation">
+    <!-- Подтверждение удаления ветки -->
+    <div class="confirmation-box">
+        <h3><i class="fas fa-exclamation-triangle" style="color: #ff4d4d; margin-right: 10px;"></i> Delete Branch?</h3>
+        <p>Are you sure you want to delete this branch? This action cannot be undone and all associated commits will be lost.</p>
+        <div class="confirmation-buttons">
+            <button class="cancel-btn" onclick="cancelBranchDelete()">Cancel</button>
+            <button class="confirm-delete-btn" id="confirmBranchDeleteBtn"><i class="fas fa-trash-alt"></i> Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно сравнения веток -->
+<div class="modal" id="branchComparisonModal">
+    <div class="modal-content">
+        <!-- Заголовок сравнения -->
+        <div class="modal-header">
+            <h3><i class="fas fa-code-compare"></i> Branch Comparison</h3>
+            <span class="close-modal" onclick="closeBranchComparisonModal()">&times;</span>
+        </div>
+        <!-- Контент сравнения -->
+        <div class="modal-body">
+            <div class="branch-title-display"></div>
+            <div class="comparison-content"></div>
+        </div>
+    </div>
+</div>
